@@ -1,0 +1,19 @@
+[project]
+name = "proofgate"
+version = "0.1.0"
+description = "A write-side proof gate that refuses to let an AI agent mark a task done without a real evidence artifact"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "calidreamconstruction" }]
+keywords = ["ai-agents", "verification", "llm", "automation", "testing"]
+
+[project.scripts]
+proofgate = "proofgate.cli:main"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["proofgate*"]
