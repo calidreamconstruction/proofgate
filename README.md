@@ -35,6 +35,49 @@ A completion is refused unless **all** of these hold:
 pip install -e .
 ```
 
+## Two-minute local walkthrough
+
+This is a **local demonstration**, not a claim that a deployment succeeded. It needs
+Python 3.9+, Git, and no cloud account or API key. The following Bash example
+checks actual proofgate helper behavior, writes the captured output to disk,
+and refuses a proof if the checks fail:
+
+```bash
+git clone https://github.com/calidreamconstruction/proofgate.git
+cd proofgate
+python -m pip install -e .
+set -o pipefail
+python - <<'PY' | proofgate --id quickstart-1 --score 8 --item "validate proofgate anchor checks"
+from proofgate import looks_like_path, token_overlap
+
+item = "validate proofgate anchor checks"
+cases = [
+    ("Remote URLs are not local evidence paths", not looks_like_path("https://example.com/proof.md")),
+    ("Local artifact paths have recognizable structure", looks_like_path("proofs/quickstart-1/output.md")),
+    ("Unrelated evidence does not match the task", token_overlap(item, "garden forecast and ocean color")[0] == 0),
+    ("Related evidence contains task anchors", token_overlap(item, "proofgate anchor checks passed")[0] > 0),
+]
+for description, passed in cases:
+    print(f"{description}: {'PASS' if passed else 'FAIL'}")
+if not all(passed for _, passed in cases):
+    raise SystemExit("A local proofgate check failed")
+PY
+```
+
+On success, the CLI prints a path like
+`proofs/quickstart-1/output.md`. Open that file to inspect the captured
+evidence. To see refusal behavior, try
+`printf 'ok\n' | proofgate --id too-short --score 8 --item "validate proofgate anchor checks"`:
+the command exits with status 2 because the *real output* is below the
+evidence-size floor.
+
+**Do not use a self-reported score, this demonstration, or a process exit code
+as independent proof of a completed deployment.** For real tasks, preserve
+the actual test/provider output, check the upstream command's exit status
+(`set -o pipefail` in Bash), verify the target externally, and invoke
+`on_pass` only after those checks. The CLI writes/validates a local artifact;
+it does not update your task database or prove a remote destination.
+
 ## Use as a library
 
 ```python
