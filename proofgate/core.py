@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import os
 import re
+import math
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable, Optional
@@ -122,7 +123,12 @@ def check_completion(item, proof_path, score) -> list[str]:
         bad.append("L4 quality_score is NULL (NULL must not evade the score floor)")
     else:
         try:
-            if float(score) < MIN_QUALITY_SCORE:
+            numeric_score = float(score)
+            if not math.isfinite(numeric_score):
+                bad.append(f"L4 quality_score {score!r} must be finite")
+            elif not 0 <= numeric_score <= 10:
+                bad.append(f"L4 quality_score {score!r} is outside the documented 0-10 range")
+            elif numeric_score < MIN_QUALITY_SCORE:
                 bad.append(f"L4 quality_score {score} < {MIN_QUALITY_SCORE}")
         except (TypeError, ValueError):
             bad.append(f"L4 quality_score {score!r} is not numeric")
